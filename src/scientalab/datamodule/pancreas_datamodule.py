@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import lightning as L
-from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 import scanpy as sc
 import torch
 from torch.utils import data
@@ -13,7 +12,7 @@ from scientalab.datamodule import pancreas_dataset
 class PancreasDataModule(L.LightningDataModule):
     def __init__(
         self,
-        data_dir,
+        data_dir: str,
         invariants: list[str] = ["celltype"],
         spurious: list[str] = ["batch"],
         batch_size: int = 256,
@@ -34,7 +33,7 @@ class PancreasDataModule(L.LightningDataModule):
         sc.pp.filter_cells(data, min_genes=200)
         sc.pp.normalize_total(data)
         sc.pp.log1p(data)
-        data.X = np.where(np.isnan(data.X), np.nanmin(data.X, 0)[None, :], data.X)
+        np.nan_to_num(data.X, copy=False)
 
         data.write_h5ad(self.data_preprocessed)
 
