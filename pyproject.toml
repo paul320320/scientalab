@@ -11,6 +11,7 @@ dependencies = [
     "lightning>=2.5.5",
     "mlflow>=3.3.2",
     "polars>=1.33.1",
+    "ruff>=0.13.0",
     "scanpy>=1.11.4",
     "scikit-learn>=1.7.2",
     "torch>=2.8.0",
