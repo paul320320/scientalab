@@ -88,7 +88,10 @@ class inVAE(L.LightningModule):
 
         self.save_hyperparameters()
 
-    def forward(self, batch):
+    def forward(
+        self,
+        batch: dict[str, torch.Tensor | list[str | float]],
+    ) -> tuple[torch.Tensor, ...]:
         invariant_var = self.prior_invariant(
             batch["x"][:, -self.invariant_dim - self.spurious_dim : -self.spurious_dim]
         )
@@ -103,7 +106,10 @@ class inVAE(L.LightningModule):
         dec_mu, dec_var = self.decoder_mean(dec), self.decoder_var(dec)
         return invariant_var, spurious_var, enc_mu, enc_var, dec_mu, dec_var, latent_sample
 
-    def training_step(self, batch) -> torch.Tensor:
+    def training_step(
+        self,
+        batch: dict[str, torch.Tensor | list[str | float]],
+    ) -> torch.Tensor:
         invariant_var, spurious_var, enc_mu, enc_var, dec_mu, dec_var, latent = self(batch)
 
         recon = (
@@ -144,7 +150,10 @@ class inVAE(L.LightningModule):
 
         return elbo_loss
 
-    def validation_step(self, batch) -> None:
+    def validation_step(
+        self,
+        batch: dict[str, torch.Tensor | list[str | float]],
+    ) -> None:
         invariant_var, spurious_var, enc_mu, enc_var, dec_mu, dec_var, latent = self(batch)
         recon = (
             utils.gaussian_likelihood(
@@ -182,7 +191,10 @@ class inVAE(L.LightningModule):
         self.log("val_kl", kl, on_step=False, on_epoch=True)
         self.log("val_loss", elbo_loss, on_step=False, on_epoch=True)
 
-    def test_step(self, batch) -> None:
+    def test_step(
+        self,
+        batch: dict[str, torch.Tensor | list[str | float]],
+    ) -> None:
         invariant_var, spurious_var, enc_mu, enc_var, dec_mu, dec_var, latent = self(batch)
         recon = (
             utils.gaussian_likelihood(
@@ -220,19 +232,22 @@ class inVAE(L.LightningModule):
         self.log("test_kl", kl, on_step=False, on_epoch=True)
         self.log("test_loss", elbo_loss, on_step=False, on_epoch=True)
 
-    def predict_step(self, batch) -> dict[str, torch.Tensor | str]:
+    def predict_step(
+        self,
+        batch: dict[str, torch.Tensor | list[str | float]],
+    ) -> dict[str, torch.Tensor | str]:
         _, _, _, _, dec_mu, dec_var, latent = self(batch)
         sample_decoder = utils.reparametrize(mean=dec_mu, variance=dec_var)
         prediction = {
-            "input": batch['x'][:, :self.output_dim].squeeze().cpu().numpy().tolist(),
+            "input": batch["x"][:, : self.output_dim].squeeze().cpu().numpy().tolist(),
             "latent": latent.squeeze().cpu().numpy().tolist(),
-            "latent_invariant": latent.squeeze().cpu().numpy().tolist()[:self.invariant_latent_dim],
-            "latent_spurious": latent.squeeze().cpu().numpy().tolist()[self.invariant_latent_dim:],
+            "latent_invariant": latent.squeeze().cpu().numpy().tolist()[: self.invariant_latent_dim],
+            "latent_spurious": latent.squeeze().cpu().numpy().tolist()[self.invariant_latent_dim :],
             "dec_mu": dec_mu.squeeze().cpu().numpy().tolist(),
             "dec_var": dec_var.squeeze().cpu().numpy().tolist(),
-            "output": sample_decoder.squeeze().cpu().numpy().tolist()
+            "output": sample_decoder.squeeze().cpu().numpy().tolist(),
         }
-        prediction.update({label: batch[label][0] for label in batch.keys() if label != 'x'})
+        prediction.update({label: batch[label][0] for label in batch.keys() if label != "x"})
         return prediction
 
     def on_train_epoch_start(self) -> None:

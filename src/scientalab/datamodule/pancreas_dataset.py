@@ -1,3 +1,5 @@
+import os
+
 import scanpy as sc
 import torch
 from torch.utils import data
@@ -7,7 +9,11 @@ from scientalab import utils
 
 class PancreasDataset(data.Dataset):
     def __init__(
-        self, data_path, invariants: list[str] = ["celltype"], spurious: list[str] = ["batch"], label: str = "celltype"
+        self,
+        data_path: os.PathLike,
+        invariants: list[str] = ["celltype"],
+        spurious: list[str] = ["batch"],
+        label: str = "celltype",
     ) -> None:
         super().__init__()
         self.data_path = data_path
@@ -26,7 +32,7 @@ class PancreasDataset(data.Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index) -> dict[str, torch.Tensor | list[str]]:
+    def __getitem__(self, index: int) -> dict[str, torch.Tensor | list[str]]:
         x = torch.Tensor(self.data.X[index])
         invariant_data = torch.Tensor(
             *[
